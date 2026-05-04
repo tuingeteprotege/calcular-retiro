@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Retiro – Katia Martínez</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --peach:   #ffd8be;
+    --pink:    #e94380;
+    --dark:    #2a2a2a;
+    --gold:    #f6c453;
+    --peach-light: #fff3ec;
+    --pink-dark:   #c73368;
+    --radius:  18px;
+    --shadow:  0 8px 40px rgba(233,67,128,.15);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--peach-light);
+    color: var(--dark);
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 16px 60px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* decorative blobs */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 55% 40% at 90% 10%, #ffd8be88 0%, transparent 70%),
+      radial-gradient(ellipse 40% 35% at 5%  80%, #e9438022 0%, transparent 70%),
+      radial-gradient(ellipse 30% 25% at 60% 95%, #f6c45333 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .card {
+    position: relative; z-index: 1;
+    background: #fff;
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    max-width: 560px;
+    width: 100%;
+    overflow: hidden;
+    animation: fadeUp .6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, var(--pink) 0%, #c73368 100%);
+    padding: 36px 36px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    right: -60px; bottom: -80px;
+  }
+
+  .badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--dark);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 99px;
+    margin-bottom: 18px;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(26px, 5vw, 34px);
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 10px;
+  }
+  .header p {
+    font-size: 14px;
+    color: rgba(255,255,255,.82);
+    line-height: 1.6;
+    max-width: 380px;
+  }
+
+  /* step indicator */
+  .steps-wrap {
+    padding: 22px 36px 0;
+    display: flex;
+    gap: 8px;
+  }
+  .step-dot {
+    height: 4px;
+    flex: 1;
+    border-radius: 99px;
+    background: #eee;
+    transition: background .3s;
+  }
+  .step-dot.active { background: var(--pink); }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 28px 36px 36px;
+    display: none;
+    animation: fadeIn .4s ease both;
+  }
+  .section.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--dark);
+    margin-bottom: 22px;
+  }
+
+  /* ── INPUTS ── */
+  .field {
+    margin-bottom: 18px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    margin-bottom: 6px;
+    letter-spacing: .01em;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"] {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid #e8e8e8;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--dark);
+    background: var(--peach-light);
+    transition: border-color .2s, box-shadow .2s;
+    outline: none;
+    -moz-appearance: textfield;
+  }
+  input::-webkit-inner-spin-button,
+  input::-webkit-outer-spin-button { -webkit-appearance: none; }
+  input:focus {
+    border-color: var(--pink);
+    box-shadow: 0 0 0 3px rgba(233,67,128,.12);
+    background: #fff;
+  }
+  input.error { border-color: #e94343; }
+
+  .prefix-wrap {
+    position: relative;
+  }
+  .prefix-wrap span {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: #aaa;
+    pointer-events: none;
+  }
+  .prefix-wrap input { padding-left: 28px; }
+
+  .err-msg {
+    font-size: 12px;
+    color: #e94343;
+    margin-top: 4px;
+    display: none;
+  }
+  .err-msg.show { display: block; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .btn:active { transform: scale(.98); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%);
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(233,67,128,.35);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 28px rgba(233,67,128,.45); }
+
+  .btn-wa {
+    background: #25d366;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(37,211,102,.3);
+    margin-top: 14px;
+  }
+  .btn-wa:hover { box-shadow: 0 6px 22px rgba(37,211,102,.4); }
+
+  /* ── LOCK GATE ── */
+  .lock-gate {
+    background: linear-gradient(135deg, #fff 0%, var(--peach-light) 100%);
+    border: 1.5px solid #ffd8be;
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .lock-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .lock-gate h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    margin-bottom: 6px;
+  }
+  .lock-gate p {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+
+  /* ── RESULTS ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+
+  .result-card {
+    background: var(--peach-light);
+    border-radius: 16px;
+    padding: 18px 16px;
+    border: 1.5px solid #ffd8be;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card::before {
+    content: '';
+    position: absolute;
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: var(--peach);
+    opacity: .5;
+    right: -12px; bottom: -12px;
+  }
+  .result-card.accent {
+    background: linear-gradient(135deg, var(--pink) 0%, var(--pink-dark) 100%);
+    border-color: transparent;
+    color: #fff;
+    grid-column: span 2;
+  }
+  .result-card.accent::before { background: rgba(255,255,255,.12); }
+
+  .result-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .65;
+    margin-bottom: 6px;
+  }
+  .result-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .result-card.accent .result-value { font-size: 28px; }
+  .result-sub {
+    font-size: 11px;
+    opacity: .7;
+    margin-top: 4px;
+  }
+
+  /* diagnosis message */
+  .diag-msg {
+    background: var(--gold);
+    border-radius: 16px;
+    padding: 20px 22px;
+    margin-bottom: 22px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--dark);
+    line-height: 1.6;
+    position: relative;
+  }
+  .diag-msg::before {
+    content: '✨';
+    margin-right: 6px;
+  }
+
+  /* advisor */
+  .advisor-strip {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--peach-light);
+    border: 1.5px solid #ffd8be;
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .advisor-avatar {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--pink), var(--gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .advisor-info { line-height: 1.4; }
+  .advisor-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--dark);
+  }
+  .advisor-title {
+    font-size: 12px;
+    color: var(--pink);
+    font-weight: 500;
+  }
+
+  /* success toast */
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--dark);
+    color: #fff;
+    padding: 12px 22px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .4s;
+    opacity: 0;
+    white-space: nowrap;
+  }
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* footer */
+  .footer-note {
+    text-align: center;
+    font-size: 11px;
+    color: #bbb;
+    padding: 0 36px 24px;
+  }
+
+  @media (max-width: 480px) {
+    .section { padding: 24px 22px 32px; }
+    .steps-wrap { padding: 18px 22px 0; }
+    .header { padding: 28px 22px 26px; }
+    .results-grid { grid-template-columns: 1fr; }
+    .result-card.accent { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="mainCard">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="badge">Haz las cuentas conmigo</div>
+    <h1>A ver… hablemos<br>de tu retiro</h1>
+    <p>En solo 4 pasos descubre cuánto deberías tener y cómo empezar a construirlo desde hoy.</p>
+  </div>
+
+  <!-- STEP DOTS -->
+  <div class="steps-wrap">
+    <div class="step-dot active" id="dot1"></div>
+    <div class="step-dot" id="dot2"></div>
+    <div class="step-dot" id="dot3"></div>
+  </div>
+
+  <!-- ── SECTION 1: Datos financieros ── -->
+  <div class="section visible" id="sec1">
+    <p class="section-title">Cuéntame un poco sobre ti</p>
+
+    <div class="field">
+      <label>Ingreso mensual actual</label>
+      <div class="prefix-wrap">
+        <span>$</span>
+        <input type="number" id="ingreso" placeholder="20,000" min="1">
+      </div>
+      <div class="err-msg" id="e-ingreso">Ingresa tu ingreso mensual.</div>
+    </div>
+
+    <div class="field">
+      <label>Tu edad actual</label>
+      <input type="number" id="edadActual" placeholder="35" min="18" max="80">
+      <div class="err-msg" id="e-edadActual">Ingresa tu edad actual.</div>
+    </div>
+
+    <div class="field">
+      <label>Edad a la que quieres retirarte</label>
+      <input type="number" id="edadRetiro" placeholder="65" min="30" max="99">
+      <div class="err-msg" id="e-edadRetiro">Debe ser mayor que tu edad actual.</div>
+    </div>
+
+    <div class="field">
+      <label>¿Cuánto puedes ahorrar al mes?</label>
+      <div class="prefix-wrap">
+        <span>$</span>
+        <input type="number" id="ahorro" placeholder="3,000" min="1">
+      </div>
+      <div class="err-msg" id="e-ahorro">Ingresa cuánto puedes ahorrar.</div>
+    </div>
+
+    <button class="btn btn-primary" onclick="validarPaso1()">
+      Ver mi diagnóstico →
+    </button>
+  </div>
+
+  <!-- ── SECTION 2: Formulario de contacto (gate) ── -->
+  <div class="section" id="sec2">
+    <div class="lock-gate">
+      <div class="lock-icon">🔒</div>
+      <h3>¡Tu diagnóstico está listo!</h3>
+      <p>Déjame tus datos para mostrarte los resultados y poder acompañarte a hacerlo realidad.</p>
+
+      <div class="field">
+        <label>Tu nombre</label>
+        <input type="text" id="nombre" placeholder="María González">
+        <div class="err-msg" id="e-nombre">Escribe tu nombre, por favor.</div>
+      </div>
+
+      <div class="field">
+        <label>Teléfono (WhatsApp)</label>
+        <input type="tel" id="telefono" placeholder="442 123 4567">
+        <div class="err-msg" id="e-telefono">Escribe tu teléfono.</div>
+      </div>
+
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="correo" placeholder="maria@email.com">
+        <div class="err-msg" id="e-correo">Ingresa un correo válido.</div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="validarPaso2()">
+      Ver mi diagnóstico completo ✨
+    </button>
+  </div>
+
+  <!-- ── SECTION 3: Resultados ── -->
+  <div class="section" id="sec3">
+    <p class="section-title">Tu diagnóstico de retiro</p>
+
+    <div class="results-grid">
+      <div class="result-card accent">
+        <div class="result-label">Meta de ahorro total</div>
+        <div class="result-value" id="r-meta">—</div>
+        <div class="result-sub">Para mantener tu estilo de vida</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-label">Años para ahorrar</div>
+        <div class="result-value" id="r-años">—</div>
+        <div class="result-sub">años de camino</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-label">Proyectado con tu ahorro</div>
+        <div class="result-value" id="r-proyectado">—</div>
+        <div class="result-sub" id="r-proyectado-sub">a la tasa actual</div>
+      </div>
+
+      <div class="result-card">
+        <div class="result-label">Diferencia</div>
+        <div class="result-value" id="r-diferencia">—</div>
+        <div class="result-sub" id="r-dif-sub">—</div>
+      </div>
+
+      <div class="result-card" style="grid-column:span 2; background:linear-gradient(135deg,#fff8ee,#fff3ec); border-color:#f6c453;">
+        <div class="result-label">Ahorro mensual recomendado</div>
+        <div class="result-value" id="r-recomendado" style="color:var(--pink)">—</div>
+        <div class="result-sub">para alcanzar tu meta</div>
+      </div>
+    </div>
+
+    <div class="diag-msg">
+      Ahora que ya lo viste claro, el siguiente paso es hacerlo realidad. Yo te ayudo a diseñar un plan a tu medida.
+    </div>
+
+    <div class="advisor-strip">
+      <div class="advisor-avatar">👩‍💼</div>
+      <div class="advisor-info">
+        <div class="advisor-name">Katia Martínez</div>
+        <div class="advisor-title">Asesora Patrimonial</div>
+      </div>
+    </div>
+
+    <button class="btn btn-wa" onclick="abrirWhatsApp()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.126.554 4.122 1.524 5.856L.054 23.814a.5.5 0 0 0 .61.625l6.098-1.598A11.955 11.955 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.952 9.952 0 0 1-5.126-1.414l-.368-.218-3.813 1 .967-3.698-.24-.38A9.952 9.952 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+      Hablar con Katia por WhatsApp
+    </button>
+  </div>
+
+  <div class="footer-note">
+    Tus datos están seguros y son solo para personalizar tu plan.
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">✓ Tus datos fueron guardados</div>
+
+<script>
+/* ─── CONFIG ─────────────────────────────── */
+const TASA_ANUAL      = 0.0395;          // 3.95 % anual (oculto al usuario)
+const WHATSAPP_NUM    = '524421809735';  // con código de país, sin +
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwXLZd_aiLUV2U1uKjwxAv1x9N71rCT1B69BJ86NFzPJXaMFTXgZVHBj1yWUtwwxRFE/exec';
+
+/* ─── STATE ──────────────────────────────── */
+let datos = {};
+
+/* ─── UTILS ──────────────────────────────── */
+const fmt = n => '$' + Math.round(n).toLocaleString('es-MX');
+const $ = id => document.getElementById(id);
+
+function showErr(id, show) {
+  const el = $(id);
+  if (el) el.classList.toggle('show', show);
+}
+function markErr(id, err) {
+  const inp = $(id);
+  if (inp) inp.classList.toggle('error', err);
+  showErr('e-' + id, err);
+}
+function clearErrors(...ids) { ids.forEach(id => markErr(id, false)); }
+
+function setDots(active) {
+  [1,2,3].forEach(n => {
+    $('dot'+n).classList.toggle('active', n <= active);
+  });
+}
+
+function showSection(id) {
+  ['sec1','sec2','sec3'].forEach(s => {
+    const el = $(s);
+    el.classList.remove('visible');
+  });
+  const target = $(id);
+  target.classList.add('visible');
+  setTimeout(() => target.scrollIntoView({ behavior:'smooth', block:'start' }), 80);
+}
+
+function showToast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+/* ─── STEP 1: validar datos financieros ─── */
+function validarPaso1() {
+  const ingreso     = parseFloat($('ingreso').value);
+  const edadActual  = parseInt($('edadActual').value);
+  const edadRetiro  = parseInt($('edadRetiro').value);
+  const ahorro      = parseFloat($('ahorro').value);
+
+  clearErrors('ingreso','edadActual','edadRetiro','ahorro');
+
+  let ok = true;
+  if (!ingreso  || ingreso  <= 0) { markErr('ingreso',    true); ok = false; }
+  if (!edadActual || edadActual < 18) { markErr('edadActual', true); ok = false; }
+  if (!edadRetiro || edadRetiro <= edadActual) { markErr('edadRetiro', true); ok = false; }
+  if (!ahorro   || ahorro   <= 0) { markErr('ahorro',     true); ok = false; }
+  if (!ok) return;
+
+  datos = { ingreso, edadActual, edadRetiro, ahorro };
+  setDots(2);
+  showSection('sec2');
+}
+
+/* ─── STEP 2: validar contacto ────────────── */
+function validarPaso2() {
+  const nombre   = $('nombre').value.trim();
+  const telefono = $('telefono').value.trim();
+  const correo   = $('correo').value.trim();
+  const emailRx  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  clearErrors('nombre','telefono','correo');
+
+  let ok = true;
+  if (!nombre)              { markErr('nombre',   true); ok = false; }
+  if (!telefono)            { markErr('telefono', true); ok = false; }
+  if (!emailRx.test(correo)){ markErr('correo',   true); ok = false; }
+  if (!ok) return;
+
+  datos.nombre   = nombre;
+  datos.telefono = telefono;
+  datos.correo   = correo;
+
+  calcularYMostrar();
+  enviarAGoogleSheets();
+  setDots(3);
+  showSection('sec3');
+}
+
+/* ─── CÁLCULO ──────────────────────────────── */
+function calcularYMostrar() {
+  const { ingreso, edadActual, edadRetiro, ahorro } = datos;
+  const años = edadRetiro - edadActual;
+  const meses = años * 12;
+  const tasaMensual = Math.pow(1 + TASA_ANUAL, 1/12) - 1;
+
+  // Meta: 70 % del ingreso mensual durante 25 años de retiro (300 meses)
+  const ingresoRetiro = ingreso * 0.70;
+  const mesesRetiro   = 300;
+  // Valor presente de la renta al momento de retiro
+  const meta = ingresoRetiro * (1 - Math.pow(1+tasaMensual, -mesesRetiro)) / tasaMensual;
+
+  // Proyección del ahorro actual con interés compuesto
+  const proyectado = ahorro * (Math.pow(1+tasaMensual, meses) - 1) / tasaMensual;
+
+  // Ahorro mensual recomendado para alcanzar la meta
+  const recomendado = meta * tasaMensual / (Math.pow(1+tasaMensual, meses) - 1);
+
+  const diferencia  = proyectado - meta;
+
+  // Mostrar
+  $('r-meta').textContent        = fmt(meta);
+  $('r-años').textContent        = años;
+  $('r-proyectado').textContent  = fmt(proyectado);
+  $('r-recomendado').textContent = fmt(recomendado);
+
+  $('r-diferencia').textContent  = diferencia >= 0 ? fmt(diferencia) : '-' + fmt(Math.abs(diferencia));
+  $('r-dif-sub').textContent     = diferencia >= 0 ? '🟢 ¡vas por buen camino!' : '🔴 por cubrir con tu plan';
+  $('r-diferencia').style.color  = diferencia >= 0 ? '#2a9d5c' : '#e94343';
+}
+
+/* ─── GOOGLE SHEETS ────────────────────────── */
+function enviarAGoogleSheets() {
+  if (APPS_SCRIPT_URL === 'PEGA_TU_URL_DE_APPS_SCRIPT_AQUÍ') return; // no configurado aún
+
+  const params = new URLSearchParams({
+    nombre:      datos.nombre,
+    telefono:    datos.telefono,
+    correo:      datos.correo,
+    ingreso:     datos.ingreso,
+    edadActual:  datos.edadActual,
+    edadRetiro:  datos.edadRetiro,
+    ahorro:      datos.ahorro,
+    fecha:       new Date().toLocaleString('es-MX')
+  });
+
+  fetch(APPS_SCRIPT_URL + '?' + params.toString())
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) showToast('✓ Tus datos fueron guardados');
+      else console.warn('Apps Script error:', data.error);
+    })
+    .catch(() => console.warn('No se pudo conectar con Google Sheets'));
+}
+
+/* ─── WHATSAPP ─────────────────────────────── */
+function abrirWhatsApp() {
+  const { nombre = '', edadActual, edadRetiro } = datos;
+  const msg = encodeURIComponent(
+    `Hola Katia! 👋 Usé tu calculadora y quisiera más información sobre mi plan de retiro.\n` +
+    `Me llamo *${nombre}*, tengo ${edadActual} años y quiero retirarme a los ${edadRetiro}.`
+  );
+  window.open(`https://wa.me/${WHATSAPP_NUM}?text=${msg}`, '_blank');
+}
+</script>
+</body>
+</html>
