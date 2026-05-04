@@ -542,7 +542,10 @@
   </div>
 
   <div class="footer-note">
-    Tus datos están seguros y son solo para personalizar tu plan.
+    Tus datos están seguros y son solo para personalizar tu plan.<br><br>
+    <strong>Katia Martínez</strong><br>
+    Asesora Patrimonial<br>
+    <a href="mailto:tuinge.teprotege@gmail.com" style="color:#e94380;text-decoration:none;">tuinge.teprotege@gmail.com</a>
   </div>
 </div>
 
@@ -702,8 +705,9 @@ function enviarAGoogleSheets() {
 function abrirWhatsApp() {
   const { nombre = '', edadActual, edadRetiro } = datos;
   const msg = encodeURIComponent(
-    `Hola Katia! 👋 Usé tu calculadora y quisiera más información sobre mi plan de retiro.\n` +
-    `Me llamo *${nombre}*, tengo ${edadActual} años y quiero retirarme a los ${edadRetiro}.`
+    `Hola Katia! 💛 Usé tu calculadora y quisiera más información sobre mi plan personal de retiro.\n` +
+    `Me llamo *${nombre}*, tengo ${edadActual} años y quiero retirarme a los ${edadRetiro}. ` +
+    `Quisiera que me ayudes a diseñarlo, por favor.`
   );
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${msg}`, '_blank');
 }
